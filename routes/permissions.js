@@ -79,13 +79,25 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortBy, order = 'asc', filterBy, filterTerm, deleted = false } = req.query;
 
     const skip = (page - 1) * limit;
-    const total = await Permission.countDocuments({ isDeleted: false });
-    const permissions = await Permission.find({ isDeleted: false })
-      .skip(skip)
-      .limit(parseInt(limit));
+
+    // Build filter object
+    const filter = {};
+    if (filterBy && filterTerm) {
+      filter[filterBy] = { $regex: filterTerm, $options: 'i' }; // Case-insensitive regex search
+    }
+    if (!deleted) {
+      filter.isDeleted = false; // Exclude soft-deleted records by default
+    }
+
+    // Build sorting object
+    const sortOrder = sortBy ? { [sortBy]: order === 'asc' ? 1 : -1 } : { createdAt: 1 };
+
+    // Fetch total count and filtered records
+    const total = await Permission.countDocuments(filter);
+    const permissions = await Permission.find(filter).sort(sortOrder).skip(skip).limit(parseInt(limit));
 
     res.status(200).json({
       total,
@@ -97,7 +109,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-module.exports = router;
 
 /**
  * @swagger
@@ -160,21 +171,125 @@ module.exports = router;
  *                   example: "Permission not found"
  *       500:
  *         description: Internal server error
- */
+*/
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     // Fetch the permission by ID
     const permission = await Permission.findById(id);
-
+    
     // Handle not found
     if (!permission || permission.isDeleted) {
       return res.status(404).json({ error: 'Permission not found' });
     }
-
+    
     res.status(200).json(permission);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+/**
+ * @swagger
+ * /api/permissions:
+ *   post:
+ *     summary: Create a new permission
+ *     tags: [Permissions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 description: Unique identifier for the permission
+ *                 example: "vwprj"
+ *               name:
+ *                 type: string
+ *                 description: Human-readable name for the permission
+ *                 example: "view-projects"
+ *               description:
+ *                 type: string
+ *                 description: Description of the permission
+ *                 example: "Allows viewing of projects"
+ *     responses:
+ *       201:
+ *         description: Permission created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: Unique identifier for the permission
+ *                   example: "67698e19fb25a1d1ae9f24f6"
+ *                 key:
+ *                   type: string
+ *                   description: Unique key for the permission
+ *                   example: "vwprj"
+ *                 name:
+ *                   type: string
+ *                   description: Name for the permission
+ *                   example: "view-projects"
+ *                 description:
+ *                   type: string
+ *                   description: Description of the permission
+ *                   example: "Allows viewing of projects"
+ *                 isDeleted:
+ *                   type: boolean
+ *                   description: Indicates whether the permission is soft-deleted
+ *                   example: false
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Timestamp when the permission was created
+ *                   example: "2024-12-23T16:21:45.784Z"
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Timestamp when the permission was last updated
+ *                   example: "2024-12-23T16:21:52.933Z"
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Permission key and name must be unique"
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/', async (req, res) => {
+  try {
+    const { key, name, description } = req.body;
+
+    // Validate request body
+    if (!key || !name) {
+      return res.status(400).json({ error: 'Key and name are required' });
+    }
+
+    // Create the permission
+    const permission = new Permission({ key, name, description });
+    await permission.save();
+
+    res.status(201).json(permission);
+  } catch (err) {
+    if (err.code === 11000) {
+      // Duplicate key or name error
+      res.status(400).json({ error: 'Permission key and name must be unique' });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
+  }
+});
+
+
+module.exports = router;

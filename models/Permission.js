@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const PermissionSchema = new mongoose.Schema({
   key: { type: String, required: true, unique: true },
+  name: { type: String, required: true, unique: true },
   description: { type: String, required: true },
   isDeleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },

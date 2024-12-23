@@ -1,8 +1,3 @@
-Here’s a well-structured `README.md` for your `qualest-be` repository, including setup instructions, project purpose, and contribution guidelines.
-
----
-
-```markdown
 # Qualest Backend (qualest-be)
 
 The backend API for Qualest, a Quality Assurance testing and management platform. This service handles project management, test plans, roles, permissions, and advanced search capabilities, providing a robust foundation for organizing QA workflows.
@@ -126,15 +121,3 @@ For questions or feedback, contact:
 - **Name**: Anthony Gaff
 - **Email**: anthony@noisy.fan
 - **GitHub**: [aegis41](https://github.com/aegis41)
-```
-
----
-
-### **Key Sections**
-1. **Features**: Highlights what the backend supports.
-2. **Getting Started**: Details installation, dependencies, and configuration.
-3. **API Documentation**: Explains Swagger integration.
-4. **Project Structure**: Provides an overview of the backend organization.
-5. **Contribution Guidelines**: Encourages collaboration with clear steps.
-
-Let me know if you’d like to adjust or customize any section!

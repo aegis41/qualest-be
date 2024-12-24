@@ -7,8 +7,9 @@ const router = express.Router();
  * @swagger
  * /api/permissions:
  *   get:
- *     summary: Get all permissions
- *     tags: [Permissions]
+ *     summary: Retrieve a list of permissions with pagination, sorting, filtering, and an option to include deleted records
+ *     tags: 
+ *       - Permissions
  *     parameters:
  *       - in: query
  *         name: page
@@ -22,9 +23,38 @@ const router = express.Router();
  *           type: integer
  *           example: 10
  *         description: "Number of results per page (default: 10)"
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *         description: "Field to sort by (e.g., name, key)"
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: 
+ *             - asc
+ *             - desc
+ *         description: "Sort order (ascending or descending)"
+ *       - in: query
+ *         name: filterBy
+ *         schema:
+ *           type: string
+ *         description: "Field to filter by (e.g., name, key)"
+ *       - in: query
+ *         name: filterTerm
+ *         schema:
+ *           type: string
+ *         description: "Term to search for in the filter field"
+ *       - in: query
+ *         name: deleted
+ *         schema:
+ *           type: boolean
+ *           example: false
+ *         description: "Include soft-deleted records in the response (default: false)"
  *     responses:
  *       200:
- *         description: List of permissions
+ *         description: "Successfully retrieved the list of permissions"
  *         content:
  *           application/json:
  *             schema:
@@ -32,7 +62,7 @@ const router = express.Router();
  *               properties:
  *                 total:
  *                   type: integer
- *                   description: "Total number of permissions"
+ *                   description: "Total number of permissions matching the criteria"
  *                   example: 50
  *                 page:
  *                   type: integer
@@ -53,12 +83,16 @@ const router = express.Router();
  *                         example: "67698e19fb25a1d1ae9f24f6"
  *                       key:
  *                         type: string
- *                         description: "Unique key for the permission"
+ *                         description: "The unique key for the permission"
  *                         example: "vwprj"
+ *                       name:
+ *                         type: string
+ *                         description: "Human-readable name for the permission"
+ *                         example: "View Projects"
  *                       description:
  *                         type: string
  *                         description: "Description of the permission"
- *                         example: "Can view projects"
+ *                         example: "Allows viewing of projects"
  *                       isDeleted:
  *                         type: boolean
  *                         description: "Indicates whether the permission is soft-deleted"
@@ -74,8 +108,18 @@ const router = express.Router();
  *                         description: "Timestamp when the permission was last updated"
  *                         example: "2024-12-23T16:21:52.933Z"
  *       500:
- *         description: "Internal server error"
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: "Error message"
+ *                   example: "Internal server error"
  */
+
 
 router.get('/', async (req, res) => {
   try {

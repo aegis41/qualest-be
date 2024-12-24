@@ -335,5 +335,252 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/permissions/{id}:
+ *   put:
+ *     summary: Update an existing permission
+ *     tags: [Permissions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "67698e19fb25a1d1ae9f24f6"
+ *         description: The ID of the permission to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 description: The unique identifier for the permission
+ *                 example: "vwprj"
+ *               name:
+ *                 type: string
+ *                 description: The human-readable name for the permission
+ *                 example: "View Projects"
+ *               description:
+ *                 type: string
+ *                 description: A description of the permission
+ *                 example: "Allows viewing of projects"
+ *     responses:
+ *       200:
+ *         description: Permission updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: Unique identifier for the permission
+ *                   example: "67698e19fb25a1d1ae9f24f6"
+ *                 key:
+ *                   type: string
+ *                   description: The unique key for the permission
+ *                   example: "vwprj"
+ *                 name:
+ *                   type: string
+ *                   description: The human-readable name for the permission
+ *                   example: "View Projects"
+ *                 description:
+ *                   type: string
+ *                   description: A description of the permission
+ *                   example: "Allows viewing of projects"
+ *                 isDeleted:
+ *                   type: boolean
+ *                   description: Indicates whether the permission is soft-deleted
+ *                   example: false
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Timestamp when the permission was created
+ *                   example: "2024-12-23T16:21:45.784Z"
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Timestamp when the permission was last updated
+ *                   example: "2024-12-23T16:21:52.933Z"
+ *       404:
+ *         description: Permission not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Permission not found"
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Duplicate key or name"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { key, name, description } = req.body;
+
+    // Validation: Ensure at least one field to update is provided
+    if (!key && !name && !description) {
+      return res.status(400).json({ error: 'At least one field (key, name, or description) must be provided' });
+    }
+
+    // Build update object
+    const updates = {};
+    if (key) updates.key = key;
+    if (name) updates.name = name;
+    if (description) updates.description = description;
+    updates.updatedAt = Date.now(); // Update timestamp
+
+    // Find and update the permission
+    const updatedPermission = await Permission.findOneAndUpdate(
+      { _id: id },
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    // Handle not found
+    if (!updatedPermission) {
+      return res.status(404).json({ error: 'Permission not found' });
+    }
+
+    res.status(200).json(updatedPermission);
+  } catch (err) {
+    if (err.code === 11000) {
+      // Handle duplicate key or name error
+      res.status(400).json({ error: 'Duplicate key or name' });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
+  }
+});
+
+
+/**
+ * @swagger
+ * /api/permissions/{id}:
+ *   delete:
+ *     summary: Soft delete a permission
+ *     tags: [Permissions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "67698e19fb25a1d1ae9f24f6"
+ *         description: The ID of the permission to soft delete
+ *     responses:
+ *       200:
+ *         description: Permission soft deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Permission soft deleted successfully"
+ *                 permission:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: Unique identifier for the permission
+ *                       example: "67698e19fb25a1d1ae9f24f6"
+ *                     key:
+ *                       type: string
+ *                       description: The unique key for the permission
+ *                       example: "vwprj"
+ *                     name:
+ *                       type: string
+ *                       description: Human-readable name for the permission
+ *                       example: "View Projects"
+ *                     description:
+ *                       type: string
+ *                       description: Description of the permission
+ *                       example: "Allows viewing of projects"
+ *                     isDeleted:
+ *                       type: boolean
+ *                       description: Indicates whether the permission is soft-deleted
+ *                       example: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Timestamp when the permission was created
+ *                       example: "2024-12-23T16:21:45.784Z"
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Timestamp when the permission was last updated
+ *                       example: "2024-12-23T16:21:52.933Z"
+ *       404:
+ *         description: Permission not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Permission not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find and soft delete the permission
+    const updatedPermission = await Permission.findOneAndUpdate(
+      { _id: id },
+      { isDeleted: true, updatedAt: Date.now() },
+      { new: true }
+    );
+
+    // Handle not found
+    if (!updatedPermission) {
+      return res.status(404).json({ error: 'Permission not found' });
+    }
+
+    res.status(200).json({
+      message: 'Permission soft deleted successfully',
+      permission: updatedPermission,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

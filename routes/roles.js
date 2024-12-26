@@ -129,10 +129,22 @@ router.post('/', async (req, res) => {
  * @swagger
  * /api/roles:
  *   get:
- *     summary: Retrieve all roles with sorting
+ *     summary: Retrieve all roles with filtering and sorting
  *     tags:
  *       - Roles
  *     parameters:
+ *       - in: query
+ *         name: filterBy
+ *         schema:
+ *           type: string
+ *           example: "name"
+ *         description: Field to filter by (e.g., name, key)
+ *       - in: query
+ *         name: filterTerm
+ *         schema:
+ *           type: string
+ *           example: "Admin"
+ *         description: Term to match in the filter field
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -148,7 +160,7 @@ router.post('/', async (req, res) => {
  *         description: Sort order, either ascending ("asc") or descending ("desc"). Default is "asc".
  *     responses:
  *       200:
- *         description: Successfully retrieved sorted list of roles
+ *         description: Successfully retrieved filtered and sorted list of roles
  *         content:
  *           application/json:
  *             schema:
@@ -191,18 +203,22 @@ router.post('/', async (req, res) => {
  *                   example: "Internal server error"
  */
 
-
-
 router.get('/', async (req, res) => {
   try{
-    const { sortBy = 'createdAt', order = 'asc' } = req.query;
+    const { sortBy = 'createdAt', order = 'asc', filterBy, filterTerm } = req.query;
+
+    // build the filter object
+    const filter = {};
+    if (filterBy && filterTerm) {
+      filter[filterBy] = { $regex: filterTerm, $options: 'i' }; // case=insensitive regex
+    }
 
     // Build the sorting object
     const sortOrder = order === 'desc' ? -1 : 1;
     const sort = { [sortBy]: sortOrder };
 
     // Retrieve sorted roles
-    const roles = await Role.find().sort(sort);
+    const roles = await Role.find(filter).sort(sort);
 
     res.status(200).json(roles);
   } catch (err) {

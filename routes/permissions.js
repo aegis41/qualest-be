@@ -5,6 +5,13 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Permissions
+ *   description: API for managing permissions
+ */
+
+/**
+ * @swagger
  * /api/permissions:
  *   get:
  *     summary: Retrieve a list of permissions with pagination, sorting, filtering, and an option to include deleted records
@@ -120,7 +127,6 @@ const router = express.Router();
  *                   example: "Internal server error"
  */
 
-
 router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, sortBy, order = 'asc', filterBy, filterTerm, deleted = false } = req.query;
@@ -159,7 +165,8 @@ router.get('/', async (req, res) => {
  * /api/permissions/{id}:
  *   get:
  *     summary: Get a permission by ID
- *     tags: [Permissions]
+ *     tags: 
+ *       - Permissions
  *     parameters:
  *       - in: path
  *         name: id
@@ -239,7 +246,8 @@ router.get('/:id', async (req, res) => {
  * /api/permissions:
  *   post:
  *     summary: Create a new permission
- *     tags: [Permissions]
+ *     tags: 
+ *       - Permissions
  *     requestBody:
  *       required: true
  *       content:
@@ -340,7 +348,8 @@ router.post('/', async (req, res) => {
  * /api/permissions/{id}:
  *   put:
  *     summary: Update an existing permission
- *     tags: [Permissions]
+ *     tags: 
+ *       - Permissions
  *     parameters:
  *       - in: path
  *         name: id
@@ -484,7 +493,8 @@ router.put('/:id', async (req, res) => {
  * /api/permissions/{id}:
  *   delete:
  *     summary: Soft delete a permission
- *     tags: [Permissions]
+ *     tags: 
+ *       - Permissions
  *     parameters:
  *       - in: path
  *         name: id

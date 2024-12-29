@@ -4,18 +4,10 @@ const TestPlan = require('../models/TestPlan');
 
 /**
  * @swagger
- * tags:
- *   name: TestPlans
- *   description: API for managing test plans
- */
-
-/**
- * @swagger
- * /api/testplans:
+ * /api/test-plans:
  *   post:
  *     summary: Create a new test plan
- *     tags:
- *       - TestPlans
+ *     tags: [TestPlans]
  *     requestBody:
  *       required: true
  *       content:
@@ -27,28 +19,14 @@ const TestPlan = require('../models/TestPlan');
  *                 type: string
  *                 description: Name of the test plan
  *                 example: "User Registration Plan"
- *                 description: Name of the test plan
- *                 example: "User Registration Plan"
  *               description:
  *                 type: string
- *                 description: Description of the test plan
- *                 example: "This plan tests user registration workflows."
  *                 description: Description of the test plan
  *                 example: "This plan tests user registration workflows."
  *               project_id:
  *                 type: string
  *                 description: ID of the associated project
  *                 example: "60e8f8e5b9c3b3f51f16e13a"
- *               created_by:
- *                 type: string
- *                 description: ID of the user creating the test plan
- *                 example: "60e8f8e5b9c3b3f51f16e13b"
- *               steps:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: List of test steps (raw strings for now)
- *                 example: ["Step 1: Navigate to the homepage", "Step 2: Register a new user"]
  *     responses:
  *       201:
  *         description: Test plan created successfully
@@ -73,16 +51,6 @@ const TestPlan = require('../models/TestPlan');
  *                   type: string
  *                   description: ID of the associated project
  *                   example: "60e8f8e5b9c3b3f51f16e13a"
- *                 created_by:
- *                   type: string
- *                   description: ID of the user creating the test plan
- *                   example: "60e8f8e5b9c3b3f51f16e13b"
- *                 steps:
- *                   type: array
- *                   items:
- *                     type: string
- *                   description: List of test steps
- *                   example: ["Step 1: Navigate to the homepage", "Step 2: Register a new user"]
  *                 created_at:
  *                   type: string
  *                   format: date-time
@@ -102,7 +70,7 @@ const TestPlan = require('../models/TestPlan');
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Name and project ID are required"
+ *                   example: "Name and project_id are required"
  *       500:
  *         description: Internal server error
  *         content:
@@ -155,6 +123,164 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/test-plans:
+ *   get:
+ *     summary: Retrieve all test plans with pagination, sorting, and filtering
+ *     tags: [TestPlans]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of results per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           example: "name"
+ *         description: Field to sort by (e.g., name, created_at)
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           example: "asc"
+ *         description: Sort order (ascending or descending)
+ *       - in: query
+ *         name: filterBy
+ *         schema:
+ *           type: string
+ *           example: "name"
+ *         description: Field to filter by
+ *       - in: query
+ *         name: filterTerm
+ *         schema:
+ *           type: string
+ *           example: "User Registration Plan"
+ *         description: Term to filter by
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved test plans
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of test plans
+ *                   example: 50
+ *                 page:
+ *                   type: integer
+ *                   description: Current page
+ *                   example: 1
+ *                 totalPages:
+ *                   type: integer
+ *                   description: Total pages available
+ *                   example: 5
+ *                 testPlans:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         description: Unique identifier for the test plan
+ *                         example: "60e8f8e5b9c3b3f51f16e13e"
+ *                       name:
+ *                         type: string
+ *                         description: Name of the test plan
+ *                         example: "User Registration Plan"
+ *                       description:
+ *                         type: string
+ *                         description: Description of the test plan
+ *                         example: "This plan tests user registration workflows."
+ *                       project_id:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             description: ID of the associated project
+ *                             example: "67695bb6cfced1e07d82b370"
+ *                           name:
+ *                             type: string
+ *                             description: Project name
+ *                             example: "Example Project One"
+ *                           description:
+ *                             type: string
+ *                             description: Text description of the project
+ *                             example: "This describes Example Project One"
+ *                       isDeleted:
+ *                         type: boolean
+ *                         description: Indicates whether the test plan is soft-deleted
+ *                         example: false
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Timestamp when the test plan was created
+ *                         example: "2024-12-23T16:21:45.784Z"
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Timestamp when the test plan was last updated
+ *                         example: "2024-12-23T16:21:52.933Z"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+
+router.get('/', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, sortBy = 'created_at', order = 'asc', filterBy, filterTerm } = req.query;
+
+    const skip = (page - 1) * limit;
+    const sortOrder = order === 'desc' ? -1 : 1;
+    const sort = { [sortBy]: sortOrder };
+
+    // Build the filter
+    const filter = { isDeleted: false }; // Exclude soft-deleted records
+    if (filterBy && filterTerm) {
+      filter[filterBy] = { $regex: filterTerm, $options: 'i' }; // Case-insensitive regex search
+    }
+
+    // Fetch total count of documents matching the filter
+    const total = await TestPlan.countDocuments(filter);
+
+    // Fetch documents with pagination, sorting, and populate project data
+    const testPlans = await TestPlan.find(filter)
+      .populate('project_id', 'name description') // Populate specific fields from Project
+      .sort(sort)
+      .skip(skip)
+      .limit(Number(limit));
+
+    // Respond with paginated data
+    res.status(200).json({
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      testPlans,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 /**
  * @swagger
@@ -162,9 +288,6 @@ router.post('/', async (req, res) => {
  *   get:
  *     summary: Retrieve a single test plan by ID
  *     tags: [TestPlans]
- *     summary: Get a test plan by ID
- *     tags: 
- *       - Test Plans
  *     parameters:
  *       - in: path
  *         name: id
@@ -208,6 +331,10 @@ router.post('/', async (req, res) => {
  *                       type: string
  *                       description: Text description of the project
  *                       example: "This describes Example Project One"
+ *                 isDeleted:
+ *                   type: boolean
+ *                   description: Indicates whether the test plan is soft-deleted
+ *                   example: false
  *                 created_at:
  *                   type: string
  *                   format: date-time
@@ -237,9 +364,9 @@ router.post('/', async (req, res) => {
  *               properties:
  *                 error:
  *                   type: string
- *                   description: Error message
  *                   example: "Internal server error"
  */
+
 
 router.get('/:id', async (req, res) => {
   try {

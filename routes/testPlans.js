@@ -237,7 +237,7 @@ router.get('/', async (req, res) => {
     const sort = { [sortBy]: sortOrder };
 
     // Build the filter
-    const filter = {};
+    const filter = { isDeleted: false };
     if (filterBy && filterTerm) {
       filter[filterBy] = { $regex: filterTerm, $options: 'i' }; // Case-insensitive regex search
     }
@@ -343,7 +343,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
     // Find the test plan by ID and populate project data
-    const testPlan = await TestPlan.findById(id).populate('project_id', 'name description');
+    const testPlan = await TestPlan.findOne({ _id: id, isDeleted: false}).populate('project_id', 'name description');
 
     // Handle test plan not found
     if (!testPlan) {
@@ -508,6 +508,114 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /api/test-plans/{id}:
+ *   delete:
+ *     summary: Soft delete a test plan
+ *     tags: [TestPlans]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "60e8f8e5b9c3b3f51f16e13e"
+ *         description: The ID of the test plan to soft delete
+ *     responses:
+ *       200:
+ *         description: Test plan soft deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Test plan soft deleted successfully"
+ *                 testPlan:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: Unique identifier for the test plan
+ *                       example: "60e8f8e5b9c3b3f51f16e13e"
+ *                     name:
+ *                       type: string
+ *                       description: Name of the test plan
+ *                       example: "User Registration Plan"
+ *                     description:
+ *                       type: string
+ *                       description: Description of the test plan
+ *                       example: "This plan tests user registration workflows."
+ *                     project_id:
+ *                       type: string
+ *                       description: ID of the associated project
+ *                       example: "60e8f8e5b9c3b3f51f16e13a"
+ *                     isDeleted:
+ *                       type: boolean
+ *                       description: Indicates whether the test plan is soft-deleted
+ *                       example: true
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Timestamp when the test plan was created
+ *                       example: "2024-12-23T16:21:45.784Z"
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Timestamp when the test plan was last updated
+ *                       example: "2024-12-23T16:21:52.933Z"
+ *       404:
+ *         description: Test plan not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Test plan not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Internal server error"
+ */
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Perform the soft delete
+    const deletedTestPlan = await TestPlan.findByIdAndUpdate(
+      id,
+      { isDeleted: true, updated_at: Date.now() }, // Set isDeleted to true
+      { new: true } // Return the updated document
+    );
+
+    // Handle test plan not found
+    if (!deletedTestPlan) {
+      return res.status(404).json({ error: 'Test plan not found' });
+    }
+
+    // Respond with success message and updated document
+    res.status(200).json({
+      message: 'Test plan soft deleted successfully',
+      testPlan: deletedTestPlan,
+    });
+  } catch (err) {
+    // Handle invalid ObjectId or other server errors
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 module.exports = router;

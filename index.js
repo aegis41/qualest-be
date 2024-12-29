@@ -11,6 +11,7 @@ const projectRoutes = require('./routes/projects');
 const testPlanRoutes = require('./routes/testPlans');
 const roleRoutes = require('./routes/roles');
 const permissionRoutes = require('./routes/permissions');
+const testStepRoutes = require('./routes/testSteps');
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/test-plans', testPlanRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/permissions', permissionRoutes);
+app.use('/api/test-steps', testStepRoutes);
 
 // Swagger setup
 const swaggerOptions = {

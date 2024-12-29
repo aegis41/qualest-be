@@ -37,12 +37,12 @@ const swaggerOptions = {
     },
     servers: [
       { url: 'http://localhost:3000', description: 'Local server' },
-    ],
+    ]
   },
   apis: ['./routes/*.js'], // Point to your route files
 };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, { explorer: true }));
 
 // MongoDB connection
 mongoose

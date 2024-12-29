@@ -7,6 +7,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 // ROUTES
+const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
 const testPlanRoutes = require('./routes/testPlans');
 const roleRoutes = require('./routes/roles');
@@ -22,6 +23,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Using Routes
+app.use('/api/users', userRoutes);
 app.use('/api/test-plans', testPlanRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/roles', roleRoutes);
